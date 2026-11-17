@@ -13,6 +13,7 @@ from urllib.parse import quote, urlparse
 
 logger = logging.getLogger(__name__)
 WEIXIN_COPY_LINE_WIDTH = 120
+_CJK_TEXT_RE = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uac00-\ud7af]")
 
 try:
     import aiohttp
@@ -432,7 +433,7 @@ def _wrap_copy_friendly_lines_for_weixin(content: str) -> str:
     wrapped: list[str] = []
     for line, is_fence, in_code_block in _walk_markdown_lines(content):
         stripped = line.strip()
-        keep = is_fence or in_code_block or len(line) <= WEIXIN_COPY_LINE_WIDTH or not stripped or stripped.startswith("|")
+        keep = is_fence or in_code_block or len(line) <= WEIXIN_COPY_LINE_WIDTH or not stripped or stripped.startswith("|") or _CJK_TEXT_RE.search(line) is not None
         if keep or _TABLE_RULE_RE.match(stripped):
             wrapped.append(line)
         else:
